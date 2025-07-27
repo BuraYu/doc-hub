@@ -2,9 +2,16 @@ import "./App.css";
 import "./index.css";
 import Header from "./components/Header";
 import { useState, useEffect } from "react";
+import { UploadedDocument, VerificationResult } from "./types";
+import { DocumentUpload } from "./components/DocumentUpload";
 
 function App() {
   const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [uploadedDocument, setUploadedDocument] =
+    useState<UploadedDocument | null>(null);
+  const [verificationResults, setVerificationResults] =
+    useState<VerificationResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (darkMode) {
@@ -16,6 +23,12 @@ function App() {
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
+  };
+
+  const handleDocumentUpload = (document: UploadedDocument | null) => {
+    setUploadedDocument(document);
+    setVerificationResults(null);
+    setError(null);
   };
 
   return (
@@ -30,10 +43,14 @@ function App() {
             </h2>
             <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Upload your ID, passport, or driver's license to extract and
-              verify personal information securely using our AI
-              technology.
+              verify personal information securely using our AI technology.
             </p>
           </div>
+
+          <DocumentUpload
+            onDocumentUpload={handleDocumentUpload}
+            uploadedDocument={uploadedDocument}
+          />
         </div>
       </main>
     </div>
