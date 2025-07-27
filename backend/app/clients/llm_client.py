@@ -17,7 +17,7 @@ if not API_KEY:
 client = genai.Client(api_key=API_KEY)
 
 # Constants - TODO improve prompt
-IMAGE_ANALYSIS_PROMPT = "Can you analyze this image, I need the name, surname, DOB and where it was issued."
+IMAGE_ANALYSIS_PROMPT = "Can you analyze this image, I need the name, surname, DOB. I need the result in Json with name, surname and date_of_birth. If you can't get the data for whatever attribute add 'unknown'"
 DEFAULT_IMAGE_PATH = os.getenv("IMAGE_PATH", "backend/data/sample-data/test.jpg")
 
 def analyze_image(image_path: str, prompt: str) -> str:
