@@ -1,1 +1,0 @@
-# Entity checking / checklist verification
