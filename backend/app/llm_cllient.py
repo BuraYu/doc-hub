@@ -16,7 +16,7 @@ if not API_KEY:
 # Initialize the GenAI client
 client = genai.Client(api_key=API_KEY)
 
-# Constants
+# Constants - TODO improve prompt
 IMAGE_ANALYSIS_PROMPT = "Can you analyze this image, I need the name, surname, DOB and where it was issued."
 DEFAULT_IMAGE_PATH = os.getenv("IMAGE_PATH", "backend/data/sample-data/test.jpg")
 
