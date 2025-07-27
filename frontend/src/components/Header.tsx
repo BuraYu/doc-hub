@@ -1,7 +1,12 @@
 import type React from "react";
-import { FileCheck } from "lucide-react";
+import { FileCheck, Sun, Moon } from "lucide-react";
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  darkMode: boolean;
+  toggleDarkMode: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ darkMode, toggleDarkMode }) => {
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -19,6 +24,17 @@ const Header: React.FC = () => {
               </p>
             </div>
           </div>
+          <button
+            onClick={toggleDarkMode}
+            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            aria-label="Toggle dark mode"
+          >
+            {darkMode ? (
+              <Sun className="h-5 w-5 text-yellow-500" />
+            ) : (
+              <Moon className="h-5 w-5 text-gray-600" />
+            )}
+          </button>
         </div>
       </div>
     </header>
