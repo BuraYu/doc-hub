@@ -66,7 +66,7 @@ const SuccessMessage: React.FC<{ results: VerificationResult }> = ({
         <ResultField
           icon={<User className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
           label="Last Name"
-          value={results.lastname}
+          value={results.surname}
         />
       </div>
       <ResultField

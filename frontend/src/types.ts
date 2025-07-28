@@ -1,6 +1,6 @@
 export interface VerificationResult {
   name: string;
-  lastname: string;
+  surname: string;
   dob: string;
 }
 

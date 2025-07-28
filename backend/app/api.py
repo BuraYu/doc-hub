@@ -4,8 +4,18 @@ import shutil
 import os
 from clients.llm_client import analyze_image, IMAGE_ANALYSIS_PROMPT
 from utils.clean_json_result import *
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Temporary directory to store uploaded files
 UPLOAD_DIR = "uploads"

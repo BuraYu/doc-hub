@@ -33,7 +33,6 @@ function App() {
     setVerificationResults(null);
     setError(null);
   };
-
   const handleVerification = async () => {
     if (!uploadedDocument) return;
 
@@ -41,16 +40,28 @@ function App() {
     setError(null);
     setVerificationResults(null);
 
-    //mock data
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const mockResults: VerificationResult = {
-        name: "John",
-        lastname: "Doe",
-        dob: "1990-01-15",
+      const formData = new FormData();
+      formData.append("file", uploadedDocument.file);
+      formData.append("prompt", "");
+      const response = await fetch("http://127.0.0.1:8000/analyze-image", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      const apiResults: VerificationResult = {
+        name: data.result.name,
+        surname: data.result.surname,
+        dob: data.result.date_of_birth,
       };
 
-      setVerificationResults(mockResults);
+      setVerificationResults(apiResults);
     } catch (err) {
       setError("Failed to verify document. Please try again.");
     } finally {
@@ -70,7 +81,7 @@ function App() {
             </h2>
             <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
               Upload your ID, passport, or driver's license to extract and
-              verify personal information securely using our advanced OCR
+              verify personal information securely using our advanced AI
               technology.
             </p>
           </div>
