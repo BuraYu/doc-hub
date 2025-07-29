@@ -42,22 +42,35 @@ function App() {
     setError(null);
     setVerificationResults(null);
 
+    //If API call fails in 30sec
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      console.log("Request timed out, aborting...");
+      controller.abort(); 
+    }, 30000);
+
     try {
       const formData = new FormData();
       formData.append("file", uploadedDocument.file);
       formData.append("prompt", "");
+
       const response = await fetch(apiUrl, {
         method: "POST",
         body: formData,
+        signal: controller.signal, 
       });
 
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
-        throw new Error(`Error: ${response.statusText}`);
+        throw new Error(
+          `HTTP Error: ${response.status} ${response.statusText}`
+        );
       }
 
       const data = await response.json();
 
-      const apiResults: VerificationResult = {
+      const apiResults = {
         name: data.result.name,
         surname: data.result.surname,
         dob: data.result.date_of_birth,
@@ -65,7 +78,20 @@ function App() {
 
       setVerificationResults(apiResults);
     } catch (err) {
-      setError("Failed to verify document. Please try again.");
+      clearTimeout(timeoutId);
+
+      if (err instanceof Error) {
+        if (err.name === "AbortError") {
+          console.log("Request was aborted");
+          setError("Request timed out. Please try again.");
+        } else if (err.name === "TypeError" && err.message.includes("fetch")) {
+          setError("Network error. Please check your connection.");
+        } else if (err.message.includes("HTTP Error")) {
+          setError("Server error. Please try again later.");
+        } else {
+          setError(`Verification failed: ${err.message}`);
+        }
+      }
     } finally {
       setIsLoading(false);
     }
