@@ -4,7 +4,7 @@ export interface VerificationResult {
   dob: string;
 }
 
-export interface UploadedDocument {
+export interface UploadedDocuments {
   file: File;
   preview: string;
 }

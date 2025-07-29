@@ -4,13 +4,14 @@ import { Header } from "./components/Header";
 import { DocumentUpload } from "./components/DocumentUpload";
 import { VerificationButton } from "./components/VerificationButton";
 import { VerificationResults } from "./components/VerificationResults";
-import { UploadedDocument, VerificationResult } from "./types";
+import { UploadedDocuments, VerificationResult } from "./types";
 import "./App.css";
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
-  const [uploadedDocument, setUploadedDocument] =
-    useState<UploadedDocument | null>(null);
+  const [uploadedDocuments, setUploadedDocuments] = useState<
+    UploadedDocuments[]
+  >([]);
   const [verificationResults, setVerificationResults] =
     useState<VerificationResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -30,13 +31,14 @@ function App() {
 
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  const handleDocumentUpload = (document: UploadedDocument | null) => {
-    setUploadedDocument(document);
+  const handleDocumentUpload = (documents: UploadedDocuments[]) => {
+    setUploadedDocuments(documents);
     setVerificationResults(null);
     setError(null);
   };
+
   const handleVerification = async () => {
-    if (!uploadedDocument) return;
+    if (!uploadedDocuments) return;
 
     setIsLoading(true);
     setError(null);
@@ -46,18 +48,18 @@ function App() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       console.log("Request timed out, aborting...");
-      controller.abort(); 
+      controller.abort();
     }, 30000);
 
     try {
       const formData = new FormData();
-      formData.append("file", uploadedDocument.file);
+      formData.append("file", uploadedDocuments[0].file);
       formData.append("prompt", "");
 
       const response = await fetch(apiUrl, {
         method: "POST",
         body: formData,
-        signal: controller.signal, 
+        signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
@@ -116,14 +118,14 @@ function App() {
 
           <DocumentUpload
             onDocumentUpload={handleDocumentUpload}
-            uploadedDocument={uploadedDocument}
+            uploadedDocuments={uploadedDocuments}
           />
 
-          {uploadedDocument && (
+          {uploadedDocuments && (
             <VerificationButton
               onVerify={handleVerification}
               isLoading={isLoading}
-              disabled={!uploadedDocument}
+              disabled={!uploadedDocuments}
             />
           )}
 

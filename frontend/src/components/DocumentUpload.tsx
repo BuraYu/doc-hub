@@ -1,96 +1,120 @@
 import React, { useState } from "react";
-import { Upload, FileImage, X } from "lucide-react";
-import { UploadedDocument } from "../types";
+import { Upload, FileImage, X, CheckCircle } from "lucide-react";
+import { UploadedDocuments } from "../types";
 
 interface DocumentUploadProps {
-  onDocumentUpload: (document: UploadedDocument | null) => void;
-  uploadedDocument: UploadedDocument | null;
+  onDocumentUpload: (documents: UploadedDocuments[]) => void;
+  uploadedDocuments: UploadedDocuments[];
 }
 
 export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   onDocumentUpload,
-  uploadedDocument,
+  uploadedDocuments,
 }) => {
   const [dragOver, setDragOver] = useState(false);
 
-  const handleFile = (file: File) => {
-    const maxSizeInBytes = 5 * 1024 * 1024;
-    const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
-    
-    if (file.size > maxSizeInBytes) {
-      alert("File size exceeds the 5MB limit.");
-      return;
-    }
+  const maxSizeInBytes = 10 * 1024 * 1024;
+  const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
 
-    if (!allowedTypes.includes(file.type)) {
-      alert("Invalid file type. Only JPEG, PNG, and GIF are allowed.");
-      return;
-    }
+  const handleFiles = (files: FileList | null) => {
+    if (!files) return;
 
-    const preview = URL.createObjectURL(file);
-    onDocumentUpload({ file, preview });
+    const newDocuments: UploadedDocuments[] = [];
+
+    Array.from(files).forEach((file) => {
+      if (file.size > maxSizeInBytes) {
+        alert(`${file.name} exceeds the 10MB limit.`);
+        return;
+      }
+
+      if (!allowedTypes.includes(file.type)) {
+        alert(`${file.name} is not a supported file type.`);
+        return;
+      }
+
+      const preview = URL.createObjectURL(file);
+      newDocuments.push({ file, preview });
+    });
+
+    if (newDocuments.length > 0) {
+      onDocumentUpload([...uploadedDocuments, ...newDocuments]);
+    }
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
-    const file = e.dataTransfer.files[0];
-    file && handleFile(file);
+    handleFiles(e.dataTransfer.files);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    file && handleFile(file);
+    handleFiles(e.target.files);
   };
 
-  const clearFile = () => {
-    if (uploadedDocument) {
-      URL.revokeObjectURL(uploadedDocument.preview);
-      onDocumentUpload(null);
-    }
+  const removeFile = (index: number) => {
+    const newDocs = [...uploadedDocuments];
+    URL.revokeObjectURL(newDocs[index].preview);
+    newDocs.splice(index, 1);
+    onDocumentUpload(newDocs);
   };
-
-  if (uploadedDocument) {
-    const { file, preview } = uploadedDocument;
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Uploaded Document
-          </h3>
-          <button
-            onClick={clearFile}
-            aria-label="Remove"
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        <img
-          src={preview}
-          alt="Uploaded"
-          className="w-full h-64 object-contain bg-gray-50 dark:bg-gray-700 rounded-lg"
-        />
-
-        <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-            <FileImage className="w-4 h-4" />
-            <span className="truncate">{file.name}</span>
-          </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-            {(file.size / 1024 / 1024).toFixed(2)} MB
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-        Upload Document
+        {uploadedDocuments.length > 0
+          ? "Uploaded Documents"
+          : "Upload Document"}
       </h3>
+
+      {uploadedDocuments.length > 0 && (
+        <div className="grid gap-4 mb-6 sm:grid-cols-2 lg:grid-cols-3">
+          {uploadedDocuments.map(({ file, preview }, index) => (
+            <div
+              key={index}
+              className="relative border rounded-lg bg-gray-50 dark:bg-gray-700 p-3"
+            >
+              <button
+                onClick={() => removeFile(index)}
+                className="absolute top-2 right-2 text-gray-400 hover:text-red-500"
+                aria-label="Remove file"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              {file.type.startsWith("image/") ? (
+                <img
+                  src={preview}
+                  alt={file.name}
+                  className="w-full h-40 object-contain rounded mb-2"
+                />
+              ) : (
+                <div className="h-40 flex flex-col items-center justify-center rounded text-sm text-gray-600 dark:text-gray-300">
+                  <CheckCircle className="w-8 h-8 text-green-500 mb-2" />
+                  <a
+                    href={preview}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 hover:underline"
+                  >
+                    Open PDF
+                  </a>
+                </div>
+              )}
+
+              <div className="text-sm text-gray-700 dark:text-gray-200">
+                <div className="flex items-center gap-2 truncate">
+                  <FileImage className="w-4 h-4" />
+                  {file.name}
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div
         className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
           dragOver
@@ -110,20 +134,20 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
           </div>
           <div>
             <p className="text-lg font-medium text-gray-900 dark:text-white">
-              Drop your document here
+              Drop documents here
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               or click to browse files
             </p>
           </div>
           <p className="text-xs text-gray-400 dark:text-gray-500">
-            Supports: ID Cards, Passports, Driver's Licenses <br />
-            Max size: 10MB • Formats: JPG, PNG, PDF
+            Max 10MB per file • JPG, PNG, PDF
           </p>
         </div>
 
         <input
           type="file"
+          multiple
           accept="image/*,.pdf"
           onChange={handleChange}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
