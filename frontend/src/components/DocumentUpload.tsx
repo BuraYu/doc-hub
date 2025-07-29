@@ -14,6 +14,13 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const [dragOver, setDragOver] = useState(false);
 
   const handleFile = (file: File) => {
+    const maxSizeInBytes = 5 * 1024 * 1024; // 5 MB
+
+    if (file.size > maxSizeInBytes) {
+      alert("File size exceeds the 5MB limit.");
+      return;
+    }
+
     if (file.type.startsWith("image/")) {
       const preview = URL.createObjectURL(file);
       onDocumentUpload({ file, preview });
