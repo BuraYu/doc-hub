@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "./components/Header";
 import { DocumentUpload } from "./components/DocumentUpload";
 import { VerificationButton } from "./components/VerificationButton";
@@ -12,10 +11,12 @@ function App() {
   const [uploadedDocuments, setUploadedDocuments] = useState<
     UploadedDocuments[]
   >([]);
-  const [verificationResults, setVerificationResults] =
-    useState<VerificationResult | null>(null);
+  const [verificationResults, setVerificationResults] = useState<
+    VerificationResult[] | null
+  >(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
 
   useEffect(() => {
     if (darkMode) {
@@ -35,16 +36,19 @@ function App() {
     setUploadedDocuments(documents);
     setVerificationResults(null);
     setError(null);
+    setAnalysisResult(null);
   };
 
   const handleVerification = async () => {
-    if (!uploadedDocuments) return;
+    if (uploadedDocuments.length === 0) {
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
     setVerificationResults(null);
+    setAnalysisResult(null);
 
-    //If API call fails in 30sec
     const controller = new AbortController();
     const timeoutId = setTimeout(() => {
       console.log("Request timed out, aborting...");
@@ -53,7 +57,9 @@ function App() {
 
     try {
       const formData = new FormData();
-      formData.append("file", uploadedDocuments[0].file);
+      uploadedDocuments.forEach((doc) => {
+        formData.append("files", doc.file);
+      });
       formData.append("prompt", "");
 
       const response = await fetch(apiUrl, {
@@ -72,11 +78,37 @@ function App() {
 
       const data = await response.json();
 
-      const apiResults = {
-        name: data.result.name,
-        surname: data.result.surname,
-        dob: data.result.date_of_birth,
-      };
+
+      if (!data) {
+        throw new Error("Empty response from server.");
+      }
+
+      if (data.error && typeof data.error === "string") {
+        setAnalysisResult(data.error);
+        return;
+      }
+
+      if (!data) {
+        throw new Error("Empty response from server.");
+      }
+
+      if (data.error && typeof data.error === "string") {
+        setAnalysisResult(data.error);
+        return;
+      }
+
+      const resultsArray = Array.isArray(data) ? data : [data];
+
+      const apiResults: VerificationResult[] = resultsArray.map(
+        (item: any) => ({
+          name: item.name,
+          name_confidence: item.name_confidence ?? 0,
+          surname: item.surname,
+          surname_confidence: item.surname_confidence ?? 0,
+          date_of_birth: item.date_of_birth,
+          date_of_birth_confidence: item.date_of_birth_confidence ?? 0,
+        })
+      );
 
       setVerificationResults(apiResults);
     } catch (err) {
@@ -84,7 +116,6 @@ function App() {
 
       if (err instanceof Error) {
         if (err.name === "AbortError") {
-          console.log("Request was aborted");
           setError("Request timed out. Please try again.");
         } else if (err.name === "TypeError" && err.message.includes("fetch")) {
           setError("Network error. Please check your connection.");
@@ -125,11 +156,15 @@ function App() {
             <VerificationButton
               onVerify={handleVerification}
               isLoading={isLoading}
-              disabled={!uploadedDocuments}
+              disabled={uploadedDocuments.length === 0}
             />
           )}
 
-          <VerificationResults results={verificationResults} error={error} />
+          <VerificationResults
+            results={verificationResults}
+            error={error}
+            analysisResult={analysisResult}
+          />
         </div>
       </main>
     </div>

@@ -1,13 +1,21 @@
 import React from "react";
 import { CheckCircle, User, Calendar, AlertCircle } from "lucide-react";
-import { VerificationResult } from "../types";
 
-interface VerificationResultsProps {
-  results: VerificationResult | null;
-  error: string | null;
+export interface VerificationResult {
+  name: string;
+  name_confidence: number;
+  surname: string;
+  surname_confidence: number;
+  date_of_birth: string;
+  date_of_birth_confidence: number;
 }
 
-// displays error message
+interface VerificationResultsProps {
+  results: VerificationResult[] | null;
+  error: string | null;
+  analysisResult?: string | null;
+}
+
 const ErrorMessage: React.FC<{ error: string }> = ({ error }) => (
   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors">
     <div className="flex items-center space-x-3 mb-4">
@@ -24,7 +32,28 @@ const ErrorMessage: React.FC<{ error: string }> = ({ error }) => (
   </div>
 );
 
-// result field
+const AnalysisResultMessage: React.FC<{ message: string }> = ({ message }) => (
+  <div className="bg-yellow-50 dark:bg-yellow-900 rounded-xl shadow-lg p-6 mb-8 transition-colors">
+    <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-400 mb-2">
+      Analysis Result
+    </h3>
+    <pre className="whitespace-pre-wrap text-yellow-900 dark:text-yellow-300 font-mono">
+      {message}
+    </pre>
+  </div>
+);
+
+const NoDataMessage: React.FC = () => (
+  <div className="bg-gray-100 dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors">
+    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+      No verification data available
+    </h3>
+    <p className="text-gray-600 dark:text-gray-400">
+      Please upload documents and run verification.
+    </p>
+  </div>
+);
+
 const ResultField: React.FC<{
   icon: React.ReactNode;
   label: string;
@@ -53,17 +82,17 @@ const ResultField: React.FC<{
   );
 };
 
-// Success message
-const SuccessMessage: React.FC<{ results: VerificationResult }> = ({
-  results,
-}) => (
+const SuccessMessage: React.FC<{
+  results: VerificationResult;
+  index: number;
+}> = ({ results, index }) => (
   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors">
     <div className="flex items-center space-x-3 mb-6">
       <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
         <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
       </div>
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-        Verification Successful
+        Verification Successful - Document #{index + 1}
       </h3>
     </div>
     <div className="space-y-4">
@@ -82,7 +111,7 @@ const SuccessMessage: React.FC<{ results: VerificationResult }> = ({
       <ResultField
         icon={<Calendar className="h-4 w-4 text-gray-500 dark:text-gray-400" />}
         label="Date of Birth"
-        value={results.dob}
+        value={results.date_of_birth}
       />
     </div>
     <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
@@ -93,18 +122,30 @@ const SuccessMessage: React.FC<{ results: VerificationResult }> = ({
   </div>
 );
 
-// Main component
 export const VerificationResults: React.FC<VerificationResultsProps> = ({
   results,
   error,
+  analysisResult,
 }) => {
   if (error) {
     return <ErrorMessage error={error} />;
   }
 
-  if (!results) {
-    return null;
+  if (analysisResult) {
+    return <AnalysisResultMessage message={analysisResult} />;
   }
 
-  return <SuccessMessage results={results} />;
+  if (!results || results.length === 0) {
+    return <NoDataMessage />;
+  }
+
+  return (
+    <>
+      {results.map((result, index) => (
+        <div key={index} className="mb-8">
+          <SuccessMessage results={result} index={index} />
+        </div>
+      ))}
+    </>
+  );
 };

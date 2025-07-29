@@ -1,13 +1,11 @@
 import json
 
-
-def clean_json_result(result: str) -> dict:
-    """
-    Cleans a JSON-like string by removing backticks and markers,
-    then parses it into a Python dictionary.
-    """
+def parse_json_response(text: str) -> dict:
+    cleaned = text.strip().strip("```")
+    if cleaned.startswith("json"):
+        cleaned = cleaned[4:].strip()
     try:
-        cleaned_result = result.strip("```json\n").strip("```\n")
-        return json.loads(cleaned_result)
+        return json.loads(cleaned)
     except json.JSONDecodeError as e:
-        raise ValueError(f"Failed to decode JSON: {str(e)}")
+        print(f"Response was not valid JSON: {text}")
+        return {}
