@@ -15,8 +15,8 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
 
   const handleFile = (file: File) => {
     const maxSizeInBytes = 5 * 1024 * 1024;
-    const allowedTypes = ["image/jpeg", "image/png"]; 
-
+    const allowedTypes = ["image/jpeg", "image/png", "application/pdf"];
+    
     if (file.size > maxSizeInBytes) {
       alert("File size exceeds the 5MB limit.");
       return;
