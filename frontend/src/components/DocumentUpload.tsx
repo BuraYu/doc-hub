@@ -14,17 +14,21 @@ export const DocumentUpload: React.FC<DocumentUploadProps> = ({
   const [dragOver, setDragOver] = useState(false);
 
   const handleFile = (file: File) => {
-    const maxSizeInBytes = 5 * 1024 * 1024; // 5 MB
+    const maxSizeInBytes = 5 * 1024 * 1024;
+    const allowedTypes = ["image/jpeg", "image/png"]; 
 
     if (file.size > maxSizeInBytes) {
       alert("File size exceeds the 5MB limit.");
       return;
     }
 
-    if (file.type.startsWith("image/")) {
-      const preview = URL.createObjectURL(file);
-      onDocumentUpload({ file, preview });
+    if (!allowedTypes.includes(file.type)) {
+      alert("Invalid file type. Only JPEG, PNG, and GIF are allowed.");
+      return;
     }
+
+    const preview = URL.createObjectURL(file);
+    onDocumentUpload({ file, preview });
   };
 
   const handleDrop = (e: React.DragEvent) => {
